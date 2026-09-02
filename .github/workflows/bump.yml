@@ -1,0 +1,68 @@
+name: Bump cask
+
+on:
+    schedule:
+        - cron: '0 6 * * *'
+    workflow_dispatch:
+
+permissions:
+    contents: write
+
+jobs:
+    bump:
+        name: Bump the cask to the latest upstream release
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout tap
+              uses: actions/checkout@v4
+
+            - name: Look for a newer upstream release
+              id: check
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  set -euo pipefail
+                  latest=$(gh release view --repo PelagicaApp/pelagica --json tagName --jq .tagName)
+                  current=$(sed -n 's/^  version "\(.*\)"$/\1/p' Casks/pelagica.rb)
+                  echo "latest=$latest" >> "$GITHUB_OUTPUT"
+
+                  if [ "$latest" = "$current" ]; then
+                    echo "Already on $current." && exit 0
+                  fi
+
+                  asset="pelagica-macos-arm64.dmg"
+                  if ! gh release view "$latest" --repo PelagicaApp/pelagica --json assets \
+                      --jq '.assets[].name' | grep -qx "$asset"; then
+                    echo "$latest has no $asset yet; waiting for the next run." && exit 0
+                  fi
+
+                  echo "changed=true" >> "$GITHUB_OUTPUT"
+
+            - name: Update version and checksum
+              if: steps.check.outputs.changed == 'true'
+              env:
+                  VERSION: ${{ steps.check.outputs.latest }}
+              run: |
+                  set -euo pipefail
+                  curl -fsSL -o pelagica.dmg \
+                    "https://github.com/PelagicaApp/pelagica/releases/download/${VERSION}/pelagica-macos-arm64.dmg"
+                  sha=$(sha256sum pelagica.dmg | cut -d' ' -f1)
+                  rm pelagica.dmg
+                  sed -i -E "s|^  version \".*\"$|  version \"${VERSION}\"|" Casks/pelagica.rb
+                  sed -i -E "s|^  sha256 \".*\"$|  sha256 \"${sha}\"|" Casks/pelagica.rb
+                  if git diff --quiet Casks/pelagica.rb; then
+                    echo "The cask was not rewritten; check its version/sha256 lines." >&2
+                    exit 1
+                  fi
+
+            - name: Commit the bump
+              if: steps.check.outputs.changed == 'true'
+              env:
+                  VERSION: ${{ steps.check.outputs.latest }}
+              run: |
+                  set -euo pipefail
+                  git config user.name "github-actions[bot]"
+                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+                  git commit -am "pelagica ${VERSION}"
+                  git push
