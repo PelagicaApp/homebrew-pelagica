@@ -1,8 +1,8 @@
 name: Bump cask
 
 on:
-    schedule:
-        - cron: '0 6 * * *'
+    repository_dispatch:
+        types: [pelagica-released]
     workflow_dispatch:
 
 permissions:
