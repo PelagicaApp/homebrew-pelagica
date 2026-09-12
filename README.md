@@ -14,18 +14,6 @@ brew install --cask pelagica
 Homebrew 6.0 refuses to load casks from a third-party tap until you trust it,
 which is why `brew trust` is needed here.
 
-Pelagica's macOS builds are not signed with an Apple Developer ID or notarised,
-so macOS quarantines the app and refuses to open it. After installing, clear the
-quarantine attribute:
-
-```sh
-xattr -dr com.apple.quarantine "/Applications/Pelagica.app"
-```
-
-Homebrew [no longer strips the quarantine attribute for you](https://github.com/Homebrew/brew/issues/20755),
-and for the same reason Pelagica cannot be submitted to the official
-`homebrew/cask` tap until upstream signs and notarises its releases.
-
 Only Apple Silicon is supported — upstream publishes an `arm64` build only.
 
 ## Upgrade
