@@ -31,7 +31,7 @@ jobs:
                     echo "Already on $current." && exit 0
                   fi
 
-                  asset="pelagica-macos-arm64.dmg"
+                  asset="pelagica-macos-arm64-${latest}.dmg"
                   if ! gh release view "$latest" --repo PelagicaApp/pelagica --json assets \
                       --jq '.assets[].name' | grep -qx "$asset"; then
                     echo "$latest has no $asset yet; waiting for the next run." && exit 0
@@ -46,7 +46,7 @@ jobs:
               run: |
                   set -euo pipefail
                   curl -fsSL -o pelagica.dmg \
-                    "https://github.com/PelagicaApp/pelagica/releases/download/${VERSION}/pelagica-macos-arm64.dmg"
+                    "https://github.com/PelagicaApp/pelagica/releases/download/${VERSION}/pelagica-macos-arm64-${VERSION}.dmg"
                   sha=$(sha256sum pelagica.dmg | cut -d' ' -f1)
                   rm pelagica.dmg
                   sed -i -E "s|^  version \".*\"$|  version \"${VERSION}\"|" Casks/pelagica.rb
