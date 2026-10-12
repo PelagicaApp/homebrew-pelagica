@@ -1,6 +1,6 @@
 cask "pelagica" do
-  version "4.11.2"
-  sha256 "1d5b539eecb59825688d8fe5c7e3798c2d55f87f941ff9280a206bad98c90083"
+  version "4.12.0"
+  sha256 "6cf2237cb5df8d266d0d754e649afe5a959c03d4033aff6e91753e9f1debaff2"
 
   url "https://github.com/PelagicaApp/pelagica/releases/download/#{version}/pelagica-macos-arm64-#{version}.dmg"
   name "Pelagica"
